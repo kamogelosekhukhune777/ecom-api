@@ -1,0 +1,38 @@
+name: Go Service CI Docker Build
+
+# Triggers the workflow on pushes to the 'main' branch
+on:
+  push:
+    branches: [ main ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build: # Changed job name to reflect action
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        # Ensures the advanced build environment is ready
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # Specifies the exact path to your Dockerfile
+          file: zarf/docker/dockerfile.ecom 
+
+          # CRITICAL CHANGE: Setting push to false means it only builds the image
+          # and keeps it within the GitHub Actions runner environment.
+          push: false 
+          
+          # Optionally tag the image for local reference in the runner (e.g., in logs)
+          tags: local/ecom-api:latest 
+          
+          # Pass the build-arg 'BUILD_REF' expected by your Dockerfile
+          build-args: |
+            BUILD_REF=${{ github.sha }}
