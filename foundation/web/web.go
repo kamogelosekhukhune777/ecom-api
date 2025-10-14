@@ -28,12 +28,14 @@ type Logger func(ctx context.Context, msg string, v ...any)
 type App struct {
 	*http.ServeMux
 	log Logger
+	mw  []MidFunc
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(log Logger) *App {
+func NewApp(log Logger, mw ...MidFunc) *App {
 	return &App{
 		ServeMux: http.NewServeMux(),
+		mw:       mw,
 	}
 }
 
@@ -41,6 +43,7 @@ func NewApp(log Logger) *App {
 // to the application server mux.
 func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...MidFunc) {
 	handlerFunc = wrapMiddleware(mw, handlerFunc)
+	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setWriter(r.Context(), w)

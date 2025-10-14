@@ -3,6 +3,7 @@ package mux
 import (
 	"net/http"
 
+	"github.com/kamogelosekhukhune777/ecom-api/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/ecom-api/foundation/logger"
 	"github.com/kamogelosekhukhune777/ecom-api/foundation/web"
 )
@@ -21,7 +22,10 @@ type RouteAdder interface {
 
 // WebAPI constructs a http.Handler with all application routes bound.
 func WebAPI(cfg Config, routeAdder RouteAdder) http.Handler {
-	app := web.NewApp(cfg.Log.Info)
+	app := web.NewApp(
+		cfg.Log.Info,
+		mid.Logger(cfg.Log),
+	)
 
 	routeAdder.Add(app, cfg)
 
