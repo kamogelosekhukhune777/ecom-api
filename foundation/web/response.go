@@ -16,7 +16,7 @@ func NewNoResponse() NoResponse {
 	return NoResponse{}
 }
 
-// Encode implements the Encoder interface.
+// Encode implements the Encoder interface
 func (NoResponse) Encode() ([]byte, string, error) {
 	return nil, "", nil
 }
@@ -28,8 +28,8 @@ type httpStatus interface {
 }
 
 // Respond sends a response to the client.
-func Respond(ctx context.Context, w http.ResponseWriter, resp Encoder) error {
-	if _, ok := resp.(NoResponse); ok {
+func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
+	if _, ok := dataModel.(NoResponse); ok {
 		return nil
 	}
 
@@ -41,9 +41,9 @@ func Respond(ctx context.Context, w http.ResponseWriter, resp Encoder) error {
 		}
 	}
 
-	statusCode := http.StatusOK
+	var statusCode = http.StatusOK
 
-	switch v := resp.(type) {
+	switch v := dataModel.(type) {
 	case httpStatus:
 		statusCode = v.HTTPStatus()
 
@@ -51,7 +51,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, resp Encoder) error {
 		statusCode = http.StatusInternalServerError
 
 	default:
-		if resp == nil {
+		if dataModel == nil {
 			statusCode = http.StatusNoContent
 		}
 	}
@@ -61,7 +61,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, resp Encoder) error {
 		return nil
 	}
 
-	data, contentType, err := resp.Encode()
+	data, contentType, err := dataModel.Encode()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return fmt.Errorf("respond: encode: %w", err)
