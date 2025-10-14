@@ -30,6 +30,10 @@ compose-logs:
 	cd ./zarf/compose/ && docker compose -f docker_compose.yaml logs
 
 # ===================================================================================================
+curl-test:
+	curl -il -X GET http://localhost:3000/test
+	
+# ===================================================================================================
 
 run: 
 	go run api/ecom/main.go

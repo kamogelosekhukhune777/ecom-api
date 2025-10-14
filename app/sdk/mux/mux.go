@@ -1,25 +1,29 @@
 package mux
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/kamogelosekhukhune777/ecom-api/foundation/logger"
+	"github.com/kamogelosekhukhune777/ecom-api/foundation/web"
 )
 
+// Config contains all the mandatory systems required by handlers.
+type Config struct {
+	Build string
+	Log   *logger.Logger
+}
+
+// RouteAdder defines behavior that sets the routes to bind for an instance
+// of the service.
+type RouteAdder interface {
+	Add(app *web.App, cfg Config)
+}
+
 // WebAPI constructs a http.Handler with all application routes bound.
-func WebAPI() *http.ServeMux {
-	mux := http.NewServeMux()
+func WebAPI(cfg Config, routeAdder RouteAdder) http.Handler {
+	app := web.NewApp(cfg.Log.Info)
 
-	h := func(w http.ResponseWriter, r *http.Request) {
-		status := struct {
-			Status string
-		}{
-			Status: "OK",
-		}
+	routeAdder.Add(app, cfg)
 
-		json.NewEncoder(w).Encode(status)
-	}
-
-	mux.HandleFunc("GET /test", h)
-
-	return mux
+	return app
 }
