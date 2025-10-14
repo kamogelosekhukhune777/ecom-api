@@ -3,13 +3,18 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 )
 
-// A Handler is a type that handles a http request within our own little mini
-// framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
+// Encoder defines behavior that can encode a data model and provide
+// the content type for that encoding.
+type Encoder interface {
+	Encode() (data []byte, contentType string, err error)
+}
+
+// HandlerFunc represents a function that handles a http request within our own
+// little mini framework.
+type HandlerFunc func(ctx context.Context, r *http.Request) Encoder
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -32,20 +37,17 @@ func NewApp(log Logger) *App {
 
 // HandleFunc sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-func (a *App) HandleFunc(pattern string, handler Handler) {
+func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...MidFunc) {
+	handlerFunc = wrapMiddleware(mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 
 		// PUT ANY CODE WE WANT HERE
 
-		if err := handler(r.Context(), w, r); err != nil {
-			// ERROR HANDLING HERE
-			fmt.Println(err)
-			return
-		}
+		_ = handlerFunc(context.Background(), r)
 
 		// PUT ANY CODE WE WANT HERE
 	}
 
-	a.ServeMux.HandleFunc(pattern, h)
+	a.ServeMux.HandleFunc(path, h)
 }
