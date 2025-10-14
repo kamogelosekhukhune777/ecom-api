@@ -14,6 +14,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/kamogelosekhukhune777/ecom-api/app/sdk/debug"
+	"github.com/kamogelosekhukhune777/ecom-api/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/ecom-api/foundation/logger"
 )
 
@@ -118,7 +119,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      nil,
+		Handler:      mux.WebAPI(),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
