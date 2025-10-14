@@ -41,12 +41,16 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 	handlerFunc = wrapMiddleware(mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 
 		// PUT ANY CODE WE WANT HERE
 
-		_ = handlerFunc(context.Background(), r)
+		resp := handlerFunc(ctx, r)
 
-		// PUT ANY CODE WE WANT HERE
+		if err := Respond(ctx, w, resp); err != nil {
+			a.log(ctx, "web-respond", "ERROR", err)
+			return
+		}
 	}
 
 	a.ServeMux.HandleFunc(path, h)
