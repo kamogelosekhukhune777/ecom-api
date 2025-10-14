@@ -23,7 +23,7 @@ WORKDIR /app/api/ecom-api
 # The output binary should be named 'ecom-api' for clarity.
 RUN go build -o /app/ecom-api -ldflags "-X main.build=${BUILD_REF}"
 
-#---
+#----------------------------------------------------------------------------------------------------------
 
 # Run the Go Binary in Alpine.
 FROM alpine:3.22
@@ -41,7 +41,7 @@ RUN addgroup -g 1000 -S ecom && \
 # 3. Copies it to the application directory in the final stage (named '/app')
 # 4. The destination file is named 'ecom-api' as well.
 # 5. Sets ownership to the newly created 'ecom' user/group.
-COPY --from=build_service --chown=ecom:ecom /app/api/ecom-api/ecom-api /app/ecom-api
+COPY --from=build_service --chown=ecom:ecom /app/ecom-api /app/ecom-api
 
 # Set the working directory to the application root.
 WORKDIR /app
