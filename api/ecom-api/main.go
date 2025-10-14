@@ -5,12 +5,15 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/kamogelosekhukhune777/ecom-api/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/ecom-api/foundation/logger"
 )
 
@@ -43,9 +46,12 @@ func main() {
 
 func run(ctx context.Context, log *logger.Logger) error {
 
-	// -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------
 	// GOMAXPROCS
-	// -------------------------------------------------------------------------
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	// -------------------------------------------------------------------------------------------------------------
+
 	// Configuration
 
 	cfg := struct {
@@ -76,7 +82,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("parsing config: %w", err)
 	}
 
-	// -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------
+
 	// App Starting
 
 	log.Info(ctx, "starting service", "version", cfg.Build)
@@ -92,7 +99,18 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	expvar.NewString("build").Set(cfg.Build)
 
-	// -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------
+	// Start Debug Service
+
+	go func() {
+		log.Info(ctx, "startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
+			log.Error(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "msg", err)
+		}
+	}()
+
+	// -------------------------------------------------------------------------------------------------------------
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
