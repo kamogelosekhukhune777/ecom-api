@@ -1,28 +1,22 @@
 # Build the Go Binary.
-# Use a more generic name for the build stage.
 FROM golang:1.25 AS build_service
 
 ENV CGO_ENABLED=0
 ARG BUILD_REF
 
-# Create the service directory and copy the module files first and then
-# download the dependencies. If this doesn't change, we won't need to do this
-# again in future builds.
-# The following lines are commented out but are good for faster builds when the go.mod/go.sum don't change.
-# RUN mkdir /app
-# COPY go.* /app/
-# WORKDIR /app
-# RUN go mod download
+# Create /app and copy all source files, including go.mod, go.sum, and the vendor folder.
+WORKDIR /app
+COPY . .
 
-# Copy the source code into the container.
-COPY . /app
-
-# Build the service binary, assuming the main package is under /app/api/ecom-api.
+# Build the service binary, explicitly telling 'go build' to use the local vendor folder.
+# The main package is assumed to be under /app/api/ecom-api.
 WORKDIR /app/api/ecom-api
 
-# The output binary should be named 'ecom-api' for clarity.
-RUN go build -o /app/ecom-api -ldflags "-X main.build=${BUILD_REF}"
+# The -mod=vendor flag tells Go to ONLY use dependencies from the vendor folder.
+# The output binary is correctly set to /app/ecom-api.
+RUN go build -mod=vendor -o /app/ecom-api -ldflags "-X main.build=${BUILD_REF}"
 
+#----------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------
 
 # Run the Go Binary in Alpine.
@@ -31,16 +25,12 @@ FROM alpine:3.22
 ARG BUILD_DATE
 ARG BUILD_REF
 
-# Create a non-root user and group, naming them consistently with the service.
+# Create a non-root user and group.
 RUN addgroup -g 1000 -S ecom && \
     adduser -u 1000 -h /app -G ecom -S ecom
 
-# The corrected COPY command:
-# 1. Takes the binary from the build stage (named 'build_service').
-# 2. Specifies the path to the built binary (named 'ecom-api' in the build stage's root /app).
-# 3. Copies it to the application directory in the final stage (named '/app')
-# 4. The destination file is named 'ecom-api' as well.
-# 5. Sets ownership to the newly created 'ecom' user/group.
+# The COPY command now correctly sources the binary from /app/ecom-api 
+# in the 'build_service' stage.
 COPY --from=build_service --chown=ecom:ecom /app/ecom-api /app/ecom-api
 
 # Set the working directory to the application root.
@@ -49,5 +39,8 @@ WORKDIR /app
 # Switch to the non-root user for security.
 USER ecom
 
-# The CMD should execute the new binary path and name.
+# Set the binary as executable.
+RUN chmod +x ./ecom-api
+
+# Execute the binary.
 CMD ["./ecom-api"]
