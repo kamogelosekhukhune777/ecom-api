@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/kamogelosekhukhune777/ecom-api/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/ecom-api/foundation/logger"
 	"github.com/kamogelosekhukhune777/ecom-api/foundation/web"
@@ -13,6 +14,7 @@ import (
 type Config struct {
 	Build string
 	Log   *logger.Logger
+	DB    *sqlx.DB
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance
