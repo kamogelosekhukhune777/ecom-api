@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/google/uuid"
+	"github.com/kamogelosekhukhune777/ecom-api/business/types/quantity"
 	"github.com/kamogelosekhukhune777/ecom-api/business/types/status"
 )
 
@@ -10,7 +11,7 @@ type Product struct {
 	Name          string
 	Description   string
 	Price         float64
-	Stock         int
+	Stock         quantity.Quantity
 	CategoryID    uuid.UUID
 	Status        status.Status
 	Slug          string
